@@ -5,14 +5,22 @@ import (
 	"flag"
 	"log"
 	"net/http"
+	"path/filepath"
+	"text/template"
 	"time"
 )
 
-const templatesDir = "tetmplates"
+const templatesDir = "templates"
 
 type Health struct {
 	Status string `json:"status"`
 	Now    string `json:"Now"`
+}
+
+type Book struct {
+	Title  string
+	Author string
+	Likes  int
 }
 
 func main() {
@@ -30,6 +38,13 @@ func main() {
 
 func booksHandler(w http.ResponseWriter, req *http.Request) {
 	log.Printf("%s %s", req.Method, req.URL.Path)
+	books := []Book{
+		{Title: "Masters of Drums", Author: "Ben Smith", Likes: 3},
+		{Title: "The Smile Touch", Author: "Margaret Maximilian", Likes: 15},
+		{Title: "Darkness Chain", Author: "Brandi Ni", Likes: 0},
+	}
+	t := template.Must(template.ParseFiles(filepath.Join(templatesDir, "books.html")))
+	_ = t.ExecuteTemplate(w, "books.html", books)
 }
 
 func healthHandler(w http.ResponseWriter, req *http.Request) {

@@ -9,7 +9,14 @@
 </head>
 
 <body>
-
+  <h1>Bookshelf</h1>
+  <div>
+    <ul>
+      {{range .}}
+      <li>[{{.Likes}}] {{.Title}} - {{.Author}}</li>
+      {{end}}
+    </ul>
+  </div>
 </body>
 
 </html>
