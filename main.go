@@ -29,11 +29,17 @@ func main() {
 
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/books", booksHandler)
+	http.HandleFunc("/book", redirectHandler)
 
 	log.Println("Server listening on", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
+}
+
+func redirectHandler(w http.ResponseWriter, req *http.Request) {
+	log.Printf("%s %s", req.Method, req.URL.Path)
+	http.Redirect(w, req, "/books", http.StatusFound)
 }
 
 func booksHandler(w http.ResponseWriter, req *http.Request) {
