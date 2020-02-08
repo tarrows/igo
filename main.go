@@ -41,6 +41,7 @@ func main() {
 	http.HandleFunc("/books/", bookItemHandler)
 	http.HandleFunc("/books", bookListHandler)
 	http.HandleFunc("/book", redirectHandler)
+	http.Handle("/", http.FileServer(http.Dir(assetsDir)))
 
 	log.Println("Server listening on", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
