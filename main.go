@@ -1,8 +1,10 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"flag"
+	"io"
 	"log"
 	"net/http"
 	"path/filepath"
@@ -41,12 +43,36 @@ func main() {
 	http.HandleFunc("/books/", bookItemHandler)
 	http.HandleFunc("/books", bookListHandler)
 	http.HandleFunc("/book", redirectHandler)
-	http.Handle("/", http.FileServer(http.Dir(assetsDir)))
+	http.Handle("/", gzippify(http.FileServer(http.Dir(assetsDir))))
 
 	log.Println("Server listening on", *addr)
 	if err := http.ListenAndServe(*addr, nil); err != nil {
 		log.Fatal("ListenAndServe:", err)
 	}
+}
+
+type gzipResponseWriter struct {
+	io.Writer
+	http.ResponseWriter
+}
+
+func (w gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
+func gzippify(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		w.Header().Set("Content-Encoding", "gzip")
+		gzw := gzip.NewWriter(w)
+		defer gzw.Close()
+		grw := gzipResponseWriter{Writer: gzw, ResponseWriter: w}
+		h.ServeHTTP(grw, r)
+	})
 }
 
 func redirectHandler(w http.ResponseWriter, req *http.Request) {
